@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Profissional - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%); 
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        /* LAYOUT */
+        .container { max-width: 1400px; margin: 0 auto; padding: 0; display: flex; height: 100vh; }
+        
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .nav-group { margin-bottom: 25px; }
+        
+        .nav-group-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            padding: 0 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #cbd5e1;
+        }
+        
+        .nav-item:hover { background: #334155; color: #f8fafc; }
+        .nav-item.active { background: #3b82f6; color: white; font-weight: 600; }
+        
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #1e293b;
+            padding: 20px 30px;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 { color: #3b82f6; font-size: 1.5rem; }
+        
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 15px;
+            padding-right: 15px;
+            border-right: 1px solid #334155;
+            font-size: 0.9rem;
+        }
+        
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        /* CONTENT AREA */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* CARDS */
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .card:hover { border-color: #3b82f6; }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .card-title {
+            color: #3b82f6;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        /* FORM ELEMENTS */
+        .form-group {
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: #cbd5e1;
+            padding-top: 10px;
+        }
+        
+        input, textarea, select {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        textarea { resize: vertical; min-height: 100px; }
+        
+        /* BUTTONS */
+        .btn {
+            padding: 10px 20px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* PERSONALITY SELECTOR */
+        .personality-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .personality-card {
+            padding: 15px;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            background: #0f172a;
+        }
+        
+        .personality-card:hover { border-color: #3b82f6; }
+        .personality-card.selected { border-color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        
+        .personality-emoji { font-size: 2rem; margin-bottom: 10px; }
+        .personality-name { font-weight: 600; margin-bottom: 5px; }
+        .personality-desc { font-size: 0.8rem; color: #94a3b8; }
+        
+        /* DYNAMIC LISTS */
+        .dynamic-list { background: #0f172a; border-radius: 8px; padding: 15px; }
+        .list-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #1e293b;
+            border-radius: 8px;
+            align-items: flex-start;
+        }
+        
+        .list-item input { flex: 1; }
+        .list-item textarea { flex: 1; min-height: 60px; }
+        
+        /* QUOTA DISPLAY */
+        .quota-section {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .quota-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+        
+        .quota-bar {
+            width: 100%;
+            height: 30px;
+            background: #0f172a;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        
+        .quota-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+        
+        .quota-fill.warning { background: linear-gradient(90deg, #f59e0b 0%, #ef4444 100%); }
+        
+        /* GRID LAYOUT */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        .info-box {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .info-label { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; }
+        .info-value { font-size: 1.5rem; font-weight: 700; color: #3b82f6; }
+        
+        /* MODAL */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* SPINNER */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* ALERT */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+        
+        .alert-success { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #86efac; }
+        .alert-error { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #fca5a5; }
+        .alert-info { background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #93c5fd; }
+        
+        /* FILE UPLOAD */
+        .file-upload-area {
+            border: 2px dashed #334155;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #0f172a;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .file-upload-area.drag { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        
+        .file-input { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">🚀 SaaS Pro</div>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">Menu Principal</div>
+                <div class="nav-item active" onclick="switchTab('overview')">📊 Visão Geral</div>
+                <div class="nav-item" onclick="switchTab('config')">⚙️ Configuração</div>
+                <div class="nav-item" onclick="switchTab('analytics')">📈 Analytics</div>
+            </div>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">Operacional</div>
+                <div class="nav-item" onclick="switchTab('whatsapp')">📱 WhatsApp</div>
+                <div class="nav-item" onclick="switchTab('messages')">💬 Mensagens</div>
+            </div>
+            
+            <div class="nav-group">
+                <div class="nav-group-title">Conta</div>
+                <div class="nav-item" onclick="logout()">🚪 Sair</div>
+            </div>
+        </aside>
+        
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <h1 id="pageTitle">📊 Visão Geral</h1>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">👤</div>
+                        <div>
+                            <div id="userName">Carregando...</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Admin</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-small" onclick="refreshData()">🔄 Atualizar</button>
+                </div>
+            </div>
+            
+            <div class="content">
+                <!-- TAB: OVERVIEW -->
+                <div id="overview" class="tab-content active">
+                    <div class="grid-2">
+                        <div class="info-box">
+                            <div class="info-label">Instâncias Ativas</div>
+                            <div class="info-value" id="activeCount">0</div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Total de Mensagens</div>
+                            <div class="info-value" id="totalMessages">0</div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Plano</div>
+                            <div class="info-value" id="planType">Trial</div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Dias Restantes</div>
+                            <div class="info-value" id="daysLeft">7</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📊 Consumo de Mensagens</div>
+                        </div>
+                        <div class="quota-section">
+                            <div class="quota-header">
+                                <span id="quotaLabel">5 / 300 mensagens</span>
+                                <span id="quotaPercent">1.7%</span>
+                            </div>
+                            <div class="quota-bar">
+                                <div class="quota-fill" id="quotaFill" style="width: 1.7%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🤖 Status da IA</div>
+                        </div>
+                        <div class="grid-2">
+                            <div>
+                                <div class="info-label">Nome da IA</div>
+                                <div style="color: #f8fafc; font-weight: 600;">Sâmara</div>
+                            </div>
+                            <div>
+                                <div class="info-label">Personalidade</div>
+                                <div style="color: #f8fafc; font-weight: 600;">Friendly</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TAB: CONFIGURAÇÃO -->
+                <div id="config" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📋 Informações da Empresa</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Nome da Empresa</label>
+                            <input type="text" id="companyName" placeholder="Ex: Barbearia Premium">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Ramo de Negócio</label>
+                            <input type="text" id="businessSegment" placeholder="Ex: Serviços de Beleza">
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🎭 Personalidade da IA</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Nome da IA</label>
+                            <input type="text" id="aiName" placeholder="Ex: Sâmara, Bruno, Central">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Tipo de Personalidade</label>
+                            <div class="personality-grid">
+                                <div class="personality-card selected" data-type="friendly" onclick="selectPersonality('friendly')">
+                                    <div class="personality-emoji">😊</div>
+                                    <div class="personality-name">Amigável</div>
+                                    <div class="personality-desc">Caloroso e empático</div>
+                                </div>
+                                <div class="personality-card" data-type="professional" onclick="selectPersonality('professional')">
+                                    <div class="personality-emoji">💼</div>
+                                    <div class="personality-name">Profissional</div>
+                                    <div class="personality-desc">Formal e direto</div>
+                                </div>
+                                <div class="personality-card" data-type="creative" onclick="selectPersonality('creative')">
+                                    <div class="personality-emoji">🎨</div>
+                                    <div class="personality-name">Criativo</div>
+                                    <div class="personality-desc">Relaxado e autêntico</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="personalityType" value="friendly">
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">💰 Tabela de Preços</div>
+                        </div>
+                        
+                        <div id="pricesList" class="dynamic-list"></div>
+                        
+                        <button class="btn btn-secondary" onclick="addPrice()">+ Adicionar Preço</button>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">❓ Perguntas Frequentes (FAQ)</div>
+                        </div>
+                        
+                        <div id="faqList" class="dynamic-list"></div>
+                        
+                        <button class="btn btn-secondary" onclick="addFAQ()">+ Adicionar FAQ</button>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📚 Arquivo de Contexto</div>
+                        </div>
+                        
+                        <div class="file-upload-area" id="fileUpload" onclick="document.getElementById('fileInput').click()">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                            <div>Clique ou arraste um arquivo TXT aqui</div>
+                            <div style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">Arquivo selecionado: <span id="fileName">Nenhum</span></div>
+                        </div>
+                        <input type="file" id="fileInput" class="file-input" accept=".txt" onchange="handleFileUpload(event)">
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">✨ Detalhes Adicionais</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Humanização & Contexto</label>
+                            <textarea id="extraDetails" placeholder="Ex: Dona Maria tem 15 anos no mercado, especialista em cortes clássicos..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="saveConfig()">💾 Salvar Configuração</button>
+                        <button class="btn btn-secondary" onclick="loadConfig()">🔄 Carregar do Servidor</button>
+                    </div>
+                </div>
+                
+                <!-- TAB: ANALYTICS -->
+                <div id="analytics" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📈 Consumo Mensal</div>
+                        </div>
+                        <canvas id="consumptionChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+                
+                <!-- TAB: WHATSAPP -->
+                <div id="whatsapp" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📱 Instâncias WhatsApp</div>
+                        </div>
+                        <div id="instances" style="margin-bottom: 15px;"></div>
+                        <button class="btn" onclick="createInstance()">+Criar Nova Instância</button>
+                    </div>
+                </div>
+                
+                <!-- TAB: MESSAGES -->
+                <div id="messages" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">💬 Últimas Mensagens</div>
+                        </div>
+                        <div id="messagesList" style="max-height: 600px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL QR CODE -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px; text-align: center;">📱 Conectar WhatsApp</h2>
+            <p id="qr-instruction" style="text-align: center; color: #94a3b8; margin-bottom: 20px;">Aguardando QR Code...</p>
+            <div id="qr-area" style="text-align: center; margin: 20px 0;"><div class="spinner"></div></div>
+            <div id="qr-status" style="text-align: center; color: #94a3b8; font-size: 0.9rem;"></div>
+            <button class="btn btn-danger" style="width: 100%; margin-top: 20px; justify-content: center;" onclick="closeQRModal()">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Socket.io & Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentConfig = {};
+        let prices = [];
+        let faqs = [];
+        
+        // ─────────────────────────────────────────
+        // INICIALIZAÇÃO
+        // ─────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            loadInstances();
+            loadMessages();
+        });
+        
+        // ─────────────────────────────────────────
+        // NAVEGAÇÃO ENTRE ABAS
+        // ─────────────────────────────────────────
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Set active nav item
+            event.target.classList.add('active');
+            
+            // Update title
+            const titles = {
+                overview: '📊 Visão Geral',
+                config: '⚙️ Configuração',
+                analytics: '📈 Analytics',
+                whatsapp: '📱 WhatsApp',
+                messages: '💬 Mensagens'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName] || 'Dashboard';
+        }
+        
+        // ─────────────────────────────────────────
+        // CARREGAMENTO DE DADOS
+        // ─────────────────────────────────────────
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) throw new Error('Erro ao carregar config');
+                
+                currentConfig = await res.json();
+                
+                // Preencher formulário
+                document.getElementById('companyName').value = currentConfig.company_name || '';
+                document.getElementById('businessSegment').value = currentConfig.business_segment || '';
+                document.getElementById('aiName').value = currentConfig.ai_name || '';
+                document.getElementById('personalityType').value = currentConfig.personality_type || 'friendly';
+                document.getElementById('extraDetails').value = currentConfig.extra_details || '';
+                document.getElementById('userName').textContent = currentConfig.company_name || 'Usuário';
+                
+                // Atualizar UI de personalidade
+                selectPersonality(currentConfig.personality_type || 'friendly');
+                
+                // Carregar preços
+                prices = currentConfig.catalog_prices ? currentConfig.catalog_prices.split('\n').filter(p => p.trim()) : [];
+                renderPrices();
+                
+                // Carregar FAQs
+                faqs = currentConfig.faq_data ? currentConfig.faq_data.split('|||').filter(f => f.trim()) : [];
+                renderFAQs();
+                
+                // Atualizar quota
+                updateQuota(currentConfig.used_messages, currentConfig.plan_limit);
+                
+                showAlert('Configuração carregada com sucesso', 'success');
+            } catch (error) {
+                console.error('Erro ao carregar config:', error);
+                showAlert('Erro ao carregar configuração', 'error');
+            }
+        }
+        
+        async function saveConfig() {
+            try {
+                const config = {
+                    company_name: document.getElementById('companyName').value,
+                    business_segment: document.getElementById('businessSegment').value,
+                    ai_name: document.getElementById('aiName').value,
+                    personality_type: document.getElementById('personalityType').value,
+                    extra_details: document.getElementById('extraDetails').value,
+                    catalog_prices: prices.join('\n'),
+                    faq_data: faqs.join('|||')
+                };
+                
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (!res.ok) throw new Error('Erro ao salvar');
+                
+                showAlert('✅ Configuração salva com sucesso!', 'success');
+                currentConfig = config;
+            } catch (error) {
+                showAlert('❌ Erro ao salvar configuração', 'error');
+                console.error(error);
+            }
+        }
+        
+        // ─────────────────────────────────────────
+        // PERSONALIDADE
+        // ─────────────────────────────────────────
+        function selectPersonality(type) {
+            document.querySelectorAll('.personality-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+            document.getElementById('personalityType').value = type;
+        }
+        
+        // ─────────────────────────────────────────
+        // PREÇOS (DINÂMICO)
+        // ─────────────────────────────────────────
+        function renderPrices() {
+            const container = document.getElementById('pricesList');
+            container.innerHTML = prices.map((price, idx) => `
+                <div class="list-item">
+                    <input type="text" value="${price}" onchange="prices[${idx}] = this.value">
+                    <button class="btn btn-danger btn-small" onclick="prices.splice(${idx}, 1); renderPrices();">✕</button>
+                </div>
+            `).join('');
+        }
+        
+        function addPrice() {
+            prices.push('');
+            renderPrices();
+        }
+        
+        // ─────────────────────────────────────────
+        // FAQ (DINÂMICO)
+        // ─────────────────────────────────────────
+        function renderFAQs() {
+            const container = document.getElementById('faqList');
+            container.innerHTML = faqs.map((faq, idx) => {
+                const [question, answer] = faq.split('|||').slice(0, 2);
+                return `
+                    <div class="list-item">
+                        <div>
+                            <div>
+                                <label style="font-size: 0.8rem; color: #64748b;">Pergunta:</label>
+                                <input type="text" value="${question || ''}" onchange="updateFAQ(${idx}, this.value, 'Q')" placeholder="P: ...">
+                            </div>
+                            <div style="margin-top: 8px;">
+                                <label style="font-size: 0.8rem; color: #64748b;">Resposta:</label>
+                                <textarea onchange="updateFAQ(${idx}, this.value, 'A')" placeholder="R: ...">${answer || ''}</textarea>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger btn-small" style="height: fit-content;" onclick="faqs.splice(${idx}, 1); renderFAQs();">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateFAQ(idx, value, part) {
+            if (part === 'Q') {
+                faqs[idx] = value + '|||' + (faqs[idx].split('|||')[1] || '');
+            } else {
+                faqs[idx] = (faqs[idx].split('|||')[0] || '') + '|||' + value;
+            }
+        }
+        
+        function addFAQ() {
+            faqs.push('P: |||R: ');
+            renderFAQs();
+        }
+        
+        // ─────────────────────────────────────────
+        // FILE UPLOAD
+        // ─────────────────────────────────────────
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentConfig.uploaded_context = e.target.result;
+                document.getElementById('fileName').textContent = file.name;
+                showAlert(`Arquivo "${file.name}" carregado com sucesso`, 'success');
+            };
+            reader.readAsText(file);
+        }
+        
+        // ─────────────────────────────────────────
+        // QUOTA
+        // ─────────────────────────────────────────
+        function updateQuota(used, limit) {
+            const percent = Math.min((used / limit) * 100, 100);
+            document.getElementById('quotaLabel').textContent = `${used} / ${limit} mensagens`;
+            document.getElementById('quotaPercent').textContent = `${percent.toFixed(1)}%`;
+            
+            const fill = document.getElementById('quotaFill');
+            fill.style.width = percent + '%';
+            
+            if (percent > 80) {
+                fill.classList.add('warning');
+            } else {
+                fill.classList.remove('warning');
+            }
+        }
+        
+        // ─────────────────────────────────────────
+        // INSTÂNCIAS WHATSAPP
+        // ─────────────────────────────────────────
+        async function loadInstances() {
+            try {
+                const res = await fetch('/api/instances');
+                const data = await res.json();
+                const container = document.getElementById('instances');
+                
+                if (!data.instances || data.instances.length === 0) {
+                    container.innerHTML = '<p style="color: #64748b;">Nenhuma instância ativa</p>';
+                    document.getElementById('activeCount').textContent = '0';
+                } else {
+                    container.innerHTML = data.instances.map(inst => `
+                        <div class="list-item" style="justify-content: space-between;">
+                            <div>
+                                <strong>${inst.name}</strong>
+                                <div style="font-size: 0.8rem; color: #10b981;">🟢 Online</div>
+                            </div>
+                            <button class="btn btn-danger btn-small" onclick="disconnectInstance('${inst.name}')">Desconectar</button>
+                        </div>
+                    `).join('');
+                    document.getElementById('activeCount').textContent = data.instances.length;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar instâncias:', error);
+            }
+        }
+        
+        function createInstance() {
+            const name = prompt('Nome da instância (ex: meu-bot):');
+            if (!name) return;
+            
+            openQRModal();
+            
+            fetch('/api/instances/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instanceName: name }}),
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    socket.emit('join', name);
+                }
+            });
+        }
+        
+        async function disconnectInstance(name) {
+            if (!confirm(`Desconectar "${name}"?`)) return;
+            
+            const res = await fetch(`/api/instances/${name}/disconnect`, { method: 'POST' });
+            if ((await res.json()).success) {
+                loadInstances();
+                showAlert('Instância desconectada', 'success');
+            }
+        }
+        
+        // ─────────────────────────────────────────
+        // MENSAGENS
+        // ─────────────────────────────────────────
+        async function loadMessages() {
+            try {
+                const res = await fetch('/api/messages');
+                const data = await res.json();
+                const container = document.getElementById('messagesList');
+                
+                if (!data.messages || data.messages.length === 0) {
+                    container.innerHTML = '<p style="color: #64748b;">Nenhuma mensagem ainda</p>';
+                    document.getElementById('totalMessages').textContent = '0';
+                } else {
+                    container.innerHTML = data.messages.map(msg => `
+                        <div style="padding: 12px; background: #0f172a; margin-bottom: 10px; border-left: 3px solid #3b82f6; border-radius: 4px;">
+                            <div style="color: #3b82f6; font-weight: 600; font-size: 0.85rem;">📨 ${msg.sender}</div>
+                            <div style="color: #cbd5e1; margin-top: 8px;"><strong>➤</strong> ${msg.text.substring(0, 100)}...</div>
+                            <div style="color: #cbd5e1; margin-top: 5px;"><strong>⟲</strong> ${msg.response.substring(0, 100)}...</div>
+                            <div style="color: #64748b; font-size: 0.75rem; margin-top: 5px;">${new Date(msg.created_at).toLocaleString('pt-BR')}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('totalMessages').textContent = data.messages.length;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+        
+        // ─────────────────────────────────────────
+        // UTILITÁRIOS
+        // ─────────────────────────────────────────
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '10000';
+            alert.style.maxWidth = '400px';
+            document.body.appendChild(alert);
+            
+            setTimeout(() => alert.remove(), 3000);
+        }
+        
+        function refreshData() {
+            loadInstances();
+            loadMessages();
+            loadConfig();
+            showAlert('✅ Dados atualizados', 'success');
+        }
+        
+        function openQRModal() {
+            document.getElementById('qrModal').classList.add('active');
+        }
+        
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.remove('active');
+        }
+        
+        function logout() {
+            if (confirm('Tem certeza que quer sair?')) {
+                window.location.href = '/login';
+            }
+        }
+        
+        // Socket events
+        socket.on('qr', (qr) => {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qr)}`;
+            document.getElementById('qr-instruction').textContent = 'Escaneie com o WhatsApp:';
+            document.getElementById('qr-area').innerHTML = `<img src="${qrUrl}" style="width: 220px; height: 220px; border-radius: 8px;">`;
+            document.getElementById('qr-status').textContent = 'Aguardando leitura...';
+        });
+        
+        socket.on('status', (data) => {
+            if (data.conectado) {
+                document.getElementById('qr-instruction').textContent = '✅ Conectado!';
+                document.getElementById('qr-area').innerHTML = '<p style="color: #10b981; font-size: 3rem;">✅</p>';
+                setTimeout(() => closeQRModal(), 2000);
+                loadInstances();
+            }
+        });
+    </script>
+</body>
+</html>

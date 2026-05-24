@@ -1,0 +1,24 @@
+{
+  "name": "meu-saas-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp SaaS Bot com IA Groq e Multi-Instância",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.19.0",
+    "openai": "^4.33.0",
+    "qrcode-terminal": "^0.12.0",
+    "socket.io": "^4.7.5",
+    "sqlite3": "^5.1.7",
+    "whatsapp-web.js": "^1.24.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
