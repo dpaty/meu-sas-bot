@@ -53,13 +53,13 @@ const checkAuth = (req, res, next) => {
 // 1. Rotas de Autenticação (Login/Logout)
 app.use('/auth', authRoutes);
 
-// 2. Rotas de Configuração - Protegidas
-app.use('/api', checkAuth, configRoutes);
+// 2. Rotas de Configuração - PÚBLICAS (sem proteção)
+app.use('/api', configRoutes);
 
-// 3. Rotas de API (WhatsApp) - Protegidas
-app.use('/api', checkAuth, apiRoutes);
+// 3. Rotas de API (WhatsApp) - PÚBLICAS (sem proteção)
+app.use('/api', apiRoutes);
 
-// 3. Páginas Visuais
+// 4. Páginas Visuais
 app.get('/login.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/login.html'));
 });

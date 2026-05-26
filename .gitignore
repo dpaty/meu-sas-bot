@@ -3,3 +3,8 @@ node_modules/
 .vercel/
 dist/
 .DS_Store
+.wwebjs_auth/
+.wwebjs_cache/
+database.sqlite
+*.log
+*.pma

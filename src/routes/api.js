@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const instanceManager = require('../core/InstanceManager');
+const HandoffService = require('../services/HandoffService');
 
 // ─────────────────────────────────────────────────
 // INSTÂNCIAS WHATSAPP
@@ -29,6 +30,26 @@ router.post('/instances/create', async (req, res) => {
         // Dispara sem bloquear — o QR chega via Socket.io
         instanceManager.initUser(instanceName.trim(), io).catch(err => {
             console.error(`[API] Erro ao inicializar ${instanceName}:`, err.message);
+        });
+
+        res.json({ success: true, message: 'Instância em inicialização. Aguarde o QR Code.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// 2.5 Iniciar Instância (alternativa para /instance/init)
+router.post('/instance/init', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId || userId.trim() === '') {
+            return res.status(400).json({ success: false, message: 'userId é obrigatório.' });
+        }
+        const io = req.app.get('io');
+
+        // Dispara sem bloquear — o QR chega via Socket.io
+        instanceManager.initUser(userId.trim(), io).catch(err => {
+            console.error(`[API] Erro ao inicializar ${userId}:`, err.message);
         });
 
         res.json({ success: true, message: 'Instância em inicialização. Aguarde o QR Code.' });
@@ -167,6 +188,123 @@ router.get('/stats/:userId', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
+});
+
+// ─────────────────────────────────────────────────
+// HANDOFF - TRANSFERÊNCIA BOT → HUMANO
+// ─────────────────────────────────────────────────
+
+// 8. Listar Chats em Atendimento Humano
+router.get('/handoff/silenciados/:userId', (req, res) => {
+    const { userId } = req.params;
+    const resultado = HandoffService.listarAtendimentos(userId);
+
+    if (!resultado.sucesso) {
+        return res.status(404).json({ 
+            success: false, 
+            message: resultado.erro 
+        });
+    }
+
+    res.json({ 
+        success: true, 
+        chatsSilenciados: resultado.chats,
+        total: resultado.total
+    });
+});
+
+// 9. Assumir Atendimento (Operador pega o chat)
+router.post('/handoff/silenciar/:userId', (req, res) => {
+    const { userId } = req.params;
+    const { chatId } = req.body;
+
+    if (!chatId || chatId.trim() === '') {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'chatId é obrigatório' 
+        });
+    }
+
+    const resultado = HandoffService.assumirAtendimento(userId, chatId.trim());
+
+    if (!resultado.sucesso) {
+        return res.status(404).json({ 
+            success: false, 
+            message: resultado.erro 
+        });
+    }
+
+    res.json({ 
+        success: true, 
+        message: resultado.mensagem,
+        silenciadoEm: resultado.silenciadoEm
+    });
+});
+
+// 10. Liberar Bot (Reativar após atendimento)
+router.post('/handoff/desilenciar/:userId', (req, res) => {
+    const { userId } = req.params;
+    const { chatId } = req.body;
+
+    if (!chatId || chatId.trim() === '') {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'chatId é obrigatório' 
+        });
+    }
+
+    const resultado = HandoffService.liberarBot(userId, chatId.trim());
+
+    if (!resultado.sucesso) {
+        return res.status(404).json({ 
+            success: false, 
+            message: resultado.erro 
+        });
+    }
+
+    res.json({ 
+        success: true, 
+        message: resultado.mensagem
+    });
+});
+
+// 11. Verificar Status de um Chat
+router.get('/handoff/status/:userId/:chatId', (req, res) => {
+    const { userId, chatId } = req.params;
+    const resultado = HandoffService.obterDadosConversa(userId, chatId);
+
+    if (resultado.erro) {
+        return res.status(404).json({ 
+            success: false, 
+            message: resultado.erro 
+        });
+    }
+
+    res.json({ 
+        success: true,
+        chatId: resultado.chatId,
+        estaSilenciado: resultado.estaSilenciado,
+        status: resultado.status,
+        silenciadoEm: resultado.silenciadoEm
+    });
+});
+
+// 12. Estado Geral de Atendimentos
+router.get('/handoff/estado/:userId', (req, res) => {
+    const { userId } = req.params;
+    const resultado = HandoffService.obterEstado(userId);
+
+    if (!resultado.sucesso) {
+        return res.status(404).json({ 
+            success: false, 
+            message: resultado.erro 
+        });
+    }
+
+    res.json({ 
+        success: true,
+        ...resultado
+    });
 });
 
 module.exports = router;
