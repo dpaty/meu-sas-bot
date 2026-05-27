@@ -307,4 +307,114 @@ router.get('/handoff/estado/:userId', (req, res) => {
     });
 });
 
+// ─────────────────────────────────────────────────
+// CONTROLE GLOBAL DO BOT (PAUSA / RETOMADA)
+// ─────────────────────────────────────────────────
+
+// 13. Pausar Bot Globalmente (humano assume todos os chats)
+router.post('/handoff/pausar/:userId', (req, res) => {
+    const { userId } = req.params;
+
+    if (!instanceManager.instances.has(userId)) {
+        return res.status(404).json({ 
+            success: false, 
+            message: 'Instância do WhatsApp não está ativa' 
+        });
+    }
+
+    const instancia = instanceManager.instances.get(userId);
+    instancia.botPausado = true;
+
+    console.log(`[HANDOFF] ⏸️  Bot pausado globalmente para usuário: ${userId}`);
+
+    res.json({ 
+        success: true, 
+        message: '⏸️ Bot pausado. Você está no controle de todos os atendimentos.',
+        botPausado: true,
+        pausadoEm: new Date().toISOString()
+    });
+});
+
+// 14. Retomar Bot (bot volta a responder automaticamente)
+router.post('/handoff/retomar/:userId', (req, res) => {
+    const { userId } = req.params;
+
+    if (!instanceManager.instances.has(userId)) {
+        return res.status(404).json({ 
+            success: false, 
+            message: 'Instância do WhatsApp não está ativa' 
+        });
+    }
+
+    const instancia = instanceManager.instances.get(userId);
+    instancia.botPausado = false;
+
+    console.log(`[HANDOFF] ▶️  Bot retomado para usuário: ${userId}`);
+
+    res.json({ 
+        success: true, 
+        message: '▶️ Bot reativado! Atendimento automático retomado.',
+        botPausado: false,
+        retomadoEm: new Date().toISOString()
+    });
+});
+
+// 15. Estado atual do bot (pausado ou ativo)
+router.get('/handoff/estado-bot/:userId', (req, res) => {
+    const { userId } = req.params;
+
+    if (!instanceManager.instances.has(userId)) {
+        return res.json({ 
+            success: true, 
+            botPausado: false,
+            instanciaAtiva: false
+        });
+    }
+
+    const instancia = instanceManager.instances.get(userId);
+    res.json({ 
+        success: true,
+        botPausado: instancia.botPausado || false,
+        instanciaAtiva: true
+    });
+});
+
+// ─────────────────────────────────────────────────
+// CONVERSAS COM STATUS INDIVIDUAL POR CHAT
+// ─────────────────────────────────────────────────
+
+// 16. Listar conversas recentes com status de pausa individual
+router.get('/conversas/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const rows = await db.getConversas(30);
+
+        // Enriquece com status de silêncio individual por chat
+        const instancia = instanceManager.instances.get(userId);
+        const conversas = rows.map(row => {
+            const silenciado = instancia
+                ? instancia.silencio.estaSilenciado(row.sender)
+                : false;
+            const timestamp = instancia && silenciado
+                ? instancia.silencio.obterTimestamp(row.sender)
+                : null;
+
+            return {
+                chatId: row.sender,
+                ultimaMensagem: row.ultima_mensagem,
+                ultimoTexto: row.ultimo_texto || '',
+                totalMensagens: row.total_msgs,
+                botPausado: silenciado,
+                pausadoEm: timestamp
+            };
+        });
+
+        res.json({ success: true, conversas });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 module.exports = router;

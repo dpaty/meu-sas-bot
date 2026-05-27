@@ -365,6 +365,67 @@
         .file-upload-area.drag { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
         
         .file-input { display: none; }
+
+        /* BOT PAUSE BUTTON */
+        .btn-pause {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 10px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .btn-pause:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(239,68,68,0.4); }
+        .btn-resume {
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 10px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-resume:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(16,185,129,0.4); }
+
+        /* PULSE INDICATOR */
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+        }
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .pulse-dot.paused { background: #ef4444; animation: pulse-red 1.2s infinite; }
+        .pulse-dot.active { background: #10b981; }
+
+        /* BOT STATUS BANNER */
+        .bot-status-banner {
+            display: none;
+            background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.1));
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 12px;
+            animation: pulse-red 2s infinite;
+        }
+        .bot-status-banner.visible { display: flex; }
     </style>
 </head>
 <body>
@@ -405,6 +466,14 @@
                             <div style="font-size: 0.8rem; color: #64748b;">Admin</div>
                         </div>
                     </div>
+                    <!-- BOT PAUSE TOGGLE -->
+                    <div id="botStatusIndicator" style="display:flex;align-items:center;gap:8px;margin-right:6px;padding:6px 12px;background:#0f172a;border-radius:8px;border:1px solid #334155;font-size:0.82rem;color:#94a3b8;">
+                        <span class="pulse-dot active" id="botPulseDot"></span>
+                        <span id="botStatusLabel">Bot Ativo</span>
+                    </div>
+                    <button id="btnPausarBot" class="btn-pause" onclick="toggleBotPause()" title="Pausar bot e assumir atendimento">
+                        ⏸️ Pausar Bot
+                    </button>
                     <button class="btn btn-secondary btn-small" onclick="refreshData()">🔄 Atualizar</button>
                 </div>
             </div>
@@ -603,15 +672,43 @@
 
                 <!-- TAB: HANDOFF - ATENDIMENTO HUMANO -->
                 <div id="handoff" class="tab-content">
+
+                    <!-- BANNER DE PAUSA GLOBAL -->
+                    <div id="botPausadoBanner" class="bot-status-banner">
+                        <span style="font-size:1.4rem;">⏸️</span>
+                        <div>
+                            <div style="font-weight:700;color:#fca5a5;">Bot Globalmente Pausado</div>
+                            <div style="font-size:0.8rem;color:#f87171;">O bot não está respondendo a nenhuma mensagem. Você está no controle total.</div>
+                        </div>
+                        <button class="btn-resume" onclick="toggleBotPause()" style="margin-left:auto;">▶️ Retomar Bot</button>
+                    </div>
+
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title">🤝 Atendimento Humano</div>
                             <button class="btn btn-secondary btn-small" onclick="refreshHandoff()">🔄 Atualizar</button>
                         </div>
 
+                        <!-- CONTROLE GLOBAL DO BOT -->
+                        <div style="background:#0f172a;border-radius:10px;padding:18px;margin-bottom:20px;border:1px solid #334155;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                                <div>
+                                    <div style="font-weight:700;color:#f8fafc;font-size:1rem;margin-bottom:4px;">🎛️ Controle Global do Bot</div>
+                                    <div style="color:#94a3b8;font-size:0.85rem;">Pause o bot instantaneamente para assumir todos os atendimentos sem digitar nada no WhatsApp.</div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <div id="globalBotStatus" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:#1e293b;border-radius:6px;font-size:0.85rem;color:#94a3b8;">
+                                        <span class="pulse-dot active" id="globalPulseDot"></span>
+                                        <span id="globalBotLabel">Bot Ativo</span>
+                                    </div>
+                                    <button id="btnPausarBotHandoff" class="btn-pause" onclick="toggleBotPause()">⏸️ Pausar Bot</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div style="background:#0f172a;border-radius:8px;padding:15px;margin-bottom:20px;border-left:3px solid #f59e0b;">
                             <p style="color:#fbbf24;font-weight:600;margin-bottom:6px;">ℹ️ Como funciona o Handoff</p>
-                            <p style="color:#94a3b8;font-size:0.875rem;">Quando o bot detecta palavras como <strong style="color:#cbd5e1">"humano", "atendente", "suporte"</strong>, ele silencia automaticamente e aguarda você responder manualmente. Use os botões abaixo para gerenciar os atendimentos.</p>
+                            <p style="color:#94a3b8;font-size:0.875rem;">Use o botão acima para pausar o bot globalmente — sem necessidade de digitar nada. Você também pode silenciar chats individuais abaixo, ou o bot detecta automaticamente palavras como <strong style="color:#cbd5e1">"humano", "atendente", "suporte"</strong>.</p>
                         </div>
 
                         <!-- Silenciar manualmente -->
@@ -620,14 +717,17 @@
                                 <label style="font-size:0.85rem;color:#64748b;display:block;margin-bottom:6px;">📞 Número do Chat (ex: 5521999998888@c.us)</label>
                                 <input type="text" id="handoffChatId" placeholder="5521999998888@c.us" style="width:100%;">
                             </div>
-                            <button class="btn" onclick="assumirManual()" style="white-space:nowrap;">👤 Assumir Atendimento</button>
-                            <button class="btn btn-success" onclick="liberarManual()" style="white-space:nowrap;">🤖 Liberar Bot</button>
+                            <button class="btn" onclick="assumirManual()" style="white-space:nowrap;">👤 Assumir Chat</button>
+                            <button class="btn btn-success" onclick="liberarManual()" style="white-space:nowrap;">🤖 Liberar Chat</button>
                         </div>
 
-                        <!-- Lista de chats silenciados -->
+                        <!-- Lista de conversas com controle individual -->
                         <div>
-                            <div style="font-weight:600;color:#cbd5e1;margin-bottom:12px;">📋 Chats em Atendimento Humano</div>
-                            <div id="handoffList"><p style="color:#64748b;">Carregando...</p></div>
+                            <div style="font-weight:600;color:#cbd5e1;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                                <span>💬 Conversas Recentes</span>
+                                <span style="font-size:0.78rem;color:#64748b;">Clique em ⏸️ ou ▶️ para controlar cada chat</span>
+                            </div>
+                            <div id="conversasList"><p style="color:#64748b;">Carregando...</p></div>
                         </div>
                     </div>
                 </div>
@@ -667,6 +767,7 @@
                 loadConfig(savedUserId);
                 socket.emit('join', savedUserId);
                 initHandoffManager(savedUserId);
+                verificarEstadoBot();
             }
             loadInstances();
             loadMessages();
@@ -678,47 +779,83 @@
             loadHandoffChats();
             // Atualiza badge e lista a cada 15 segundos
             setInterval(loadHandoffChats, 15000);
+            // Verifica estado de pausa do bot a cada 30 segundos
+            setInterval(verificarEstadoBot, 30000);
         }
 
         async function loadHandoffChats() {
-            if (!handoffManager) return;
-            const chats = await handoffManager.carregarChatsEmAtendimento();
-            renderHandoffList(chats);
+            const uid = savedUserId || document.getElementById('instanceUserId')?.value?.trim();
+            if (!uid) return;
 
-            // Atualiza badge no menu
-            const badge = document.getElementById('handoff-badge');
-            if (chats.length > 0) {
-                badge.textContent = chats.length;
-                badge.style.display = 'inline';
-            } else {
-                badge.style.display = 'none';
+            try {
+                const res = await fetch(`/api/conversas/${uid}`);
+                const data = await res.json();
+                const conversas = data.success ? data.conversas : [];
+                renderConversas(conversas);
+
+                // Atualiza badge: conta quantas estão em atendimento humano
+                const badge = document.getElementById('handoff-badge');
+                const emAtendimento = conversas.filter(c => c.botPausado).length;
+                if (emAtendimento > 0) {
+                    badge.textContent = emAtendimento;
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Erro ao carregar conversas:', e);
             }
         }
 
-        function renderHandoffList(chats) {
-            const container = document.getElementById('handoffList');
+        function renderConversas(conversas) {
+            const container = document.getElementById('conversasList');
             if (!container) return;
 
-            if (!chats || chats.length === 0) {
+            if (!conversas || conversas.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center;padding:30px;color:#64748b;">
-                        <div style="font-size:2.5rem;margin-bottom:10px;">🤖</div>
-                        <div>Nenhum chat em atendimento humano</div>
-                        <div style="font-size:0.85rem;margin-top:5px;">O bot está respondendo automaticamente a todos os chats.</div>
+                        <div style="font-size:2.5rem;margin-bottom:10px;">💬</div>
+                        <div>Nenhuma conversa encontrada</div>
+                        <div style="font-size:0.85rem;margin-top:5px;">As conversas aparecerão aqui assim que o bot receber mensagens.</div>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = chats.map(chat => {
-                const horario = new Date(chat.silenciadoEm).toLocaleString('pt-BR');
+            container.innerHTML = conversas.map(c => {
+                const numero = c.chatId.replace('@c.us', '').replace('@s.whatsapp.net', '');
+                const pausado = c.botPausado;
+                const horario = new Date(c.ultimaMensagem).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                const ultimoTexto = (c.ultimoTexto || '').substring(0, 55) + (c.ultimoTexto && c.ultimoTexto.length > 55 ? '...' : '');
+                const pausadoDesde = pausado && c.pausadoEm
+                    ? new Date(c.pausadoEm).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+                    : null;
+
                 return `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#0f172a;border-radius:8px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-                        <div>
-                            <div style="font-weight:600;color:#f8fafc;">${chat.chatId}</div>
-                            <div style="font-size:0.8rem;color:#64748b;margin-top:3px;">⏱️ Em atendimento desde: ${horario}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#0f172a;border-radius:10px;margin-bottom:8px;border-left:4px solid ${pausado ? '#f59e0b' : '#1e40af'};transition:all 0.2s;" onmouseover="this.style.background='#162032'" onmouseout="this.style.background='#0f172a'">
+                        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+                            <div style="width:40px;height:40px;border-radius:50%;background:${pausado ? 'linear-gradient(135deg,#f59e0b,#ef4444)' : 'linear-gradient(135deg,#1e40af,#3b82f6)'};display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">
+                                ${pausado ? '👤' : '🤖'}
+                            </div>
+                            <div style="min-width:0;">
+                                <div style="font-weight:600;color:#f8fafc;font-size:0.95rem;">${numero}</div>
+                                <div style="font-size:0.78rem;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;" title="${c.ultimoTexto || ''}">
+                                    ${ultimoTexto || '<em>sem mensagem</em>'}
+                                </div>
+                                <div style="font-size:0.72rem;margin-top:3px;">
+                                    ${pausado
+                                        ? `<span style="color:#f59e0b;">⏸️ Atendimento humano desde ${pausadoDesde || 'pouco'}</span>`
+                                        : `<span style="color:#10b981;">🤖 Bot ativo &bull;</span> <span style="color:#475569;">${horario}</span>`
+                                    }
+                                </div>
+                            </div>
                         </div>
-                        <button class="btn btn-success btn-small" onclick="liberarChatId('${chat.chatId}')">🤖 Liberar Bot</button>
+                        <div style="display:flex;gap:8px;flex-shrink:0;margin-left:12px;">
+                            ${pausado
+                                ? `<button class="btn btn-success btn-small" onclick="toggleChatIndividual('${c.chatId}', false)" title="Reativar bot">▶️ Retomar Bot</button>`
+                                : `<button class="btn btn-small" style="background:linear-gradient(135deg,#f59e0b,#d97706);" onclick="toggleChatIndividual('${c.chatId}', true)" title="Pausar bot neste chat">⏸️ Pausar</button>`
+                            }
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -748,10 +885,114 @@
         }
 
         async function liberarChatId(chatId) {
-            if (!handoffManager) return;
-            await handoffManager.liberarBot(chatId);
+            const uid = savedUserId || document.getElementById('instanceUserId')?.value?.trim();
+            if (!uid) return;
+            await fetch(`/api/handoff/desilenciar/${uid}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chatId })
+            });
             showAlert(`🤖 Bot reativado para ${chatId}`, 'success');
             await loadHandoffChats();
+        }
+
+        async function toggleChatIndividual(chatId, pausar) {
+            const uid = savedUserId || document.getElementById('instanceUserId')?.value?.trim();
+            if (!uid) { showAlert('⚠️ Configure e salve o ID da Instância primeiro.', 'error'); return; }
+
+            const rota = pausar ? 'silenciar' : 'desilenciar';
+            try {
+                const res = await fetch(`/api/handoff/${rota}/${uid}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chatId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const msg = pausar
+                        ? `⏸️ Bot pausado para ${chatId.replace('@c.us','')}`
+                        : `▶️ Bot retomado para ${chatId.replace('@c.us','')}` ;
+                    showAlert(msg, pausar ? 'error' : 'success');
+                    await loadHandoffChats();
+                } else {
+                    showAlert('⚠️ ' + (data.message || 'Erro'), 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Erro de conexão', 'error');
+            }
+        }
+
+        // ─────────────────────────────────────────
+        // PAUSA GLOBAL DO BOT
+        // ─────────────────────────────────────────
+        let botEstaGlobalmentePausado = false;
+
+        async function verificarEstadoBot() {
+            const uid = savedUserId || document.getElementById('instanceUserId')?.value?.trim();
+            if (!uid) return;
+            try {
+                const res = await fetch(`/api/handoff/estado-bot/${uid}`);
+                const data = await res.json();
+                if (data.success) {
+                    atualizarUIBotPausado(data.botPausado);
+                }
+            } catch (e) {
+                console.error('Erro ao verificar estado do bot:', e);
+            }
+        }
+
+        function atualizarUIBotPausado(pausado) {
+            botEstaGlobalmentePausado = pausado;
+
+            // Header
+            const btnHeader = document.getElementById('btnPausarBot');
+            const pulseDot = document.getElementById('botPulseDot');
+            const statusLabel = document.getElementById('botStatusLabel');
+
+            // Handoff tab
+            const btnHandoff = document.getElementById('btnPausarBotHandoff');
+            const globalPulseDot = document.getElementById('globalPulseDot');
+            const globalLabel = document.getElementById('globalBotLabel');
+            const banner = document.getElementById('botPausadoBanner');
+
+            if (pausado) {
+                if (btnHeader) { btnHeader.className = 'btn-resume'; btnHeader.innerHTML = '▶️ Retomar Bot'; }
+                if (pulseDot) { pulseDot.className = 'pulse-dot paused'; }
+                if (statusLabel) statusLabel.textContent = 'Bot Pausado';
+                if (btnHandoff) { btnHandoff.className = 'btn-resume'; btnHandoff.innerHTML = '▶️ Retomar Bot'; }
+                if (globalPulseDot) { globalPulseDot.className = 'pulse-dot paused'; }
+                if (globalLabel) globalLabel.textContent = 'Bot Pausado';
+                if (banner) banner.classList.add('visible');
+            } else {
+                if (btnHeader) { btnHeader.className = 'btn-pause'; btnHeader.innerHTML = '⏸️ Pausar Bot'; }
+                if (pulseDot) { pulseDot.className = 'pulse-dot active'; }
+                if (statusLabel) statusLabel.textContent = 'Bot Ativo';
+                if (btnHandoff) { btnHandoff.className = 'btn-pause'; btnHandoff.innerHTML = '⏸️ Pausar Bot'; }
+                if (globalPulseDot) { globalPulseDot.className = 'pulse-dot active'; }
+                if (globalLabel) globalLabel.textContent = 'Bot Ativo';
+                if (banner) banner.classList.remove('visible');
+            }
+        }
+
+        async function toggleBotPause() {
+            const uid = savedUserId || document.getElementById('instanceUserId')?.value?.trim();
+            if (!uid) { showAlert('⚠️ Configure e salve o ID da Instância primeiro.', 'error'); return; }
+
+            const rota = botEstaGlobalmentePausado ? 'retomar' : 'pausar';
+            try {
+                const res = await fetch(`/api/handoff/${rota}/${uid}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    atualizarUIBotPausado(data.botPausado);
+                    const msg = data.botPausado
+                        ? '⏸️ Bot pausado! Você está no controle.'
+                        : '▶️ Bot reativado! Atendimento automático retomado.';
+                    showAlert(msg, data.botPausado ? 'error' : 'success');
+                } else {
+                    showAlert('⚠️ ' + (data.message || 'Erro ao alterar estado do bot'), 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Erro de conexão ao alterar estado do bot', 'error');
+            }
         }
         
         let debounceTimer;

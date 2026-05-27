@@ -87,7 +87,7 @@ class InstanceManager {
 
         client.on('ready', () => {
             console.log(`[READY] Cliente ${userId} está online!`);
-            this.instances.set(userId, { client, status: 'connected', silencio, conversationCtrl });
+            this.instances.set(userId, { client, status: 'connected', silencio, conversationCtrl, botPausado: false });
             io.to(userId).emit('status', { conectado: true, mensagem: "WhatsApp Conectado com Sucesso!" });
         });
 
@@ -128,6 +128,15 @@ class InstanceManager {
             // ─────────────────────────────────────────
             if (msg.fromMe || msg.isGroup || msg.isStatus) {
                 if (msg.fromMe) silencio.registrarMensagemDoBot(msg);
+                return;
+            }
+
+            // ─────────────────────────────────────────
+            // ETAPA 1.5: Verificar Pausa Global do Bot
+            // ─────────────────────────────────────────
+            const instancia = this.instances.get(userId);
+            if (instancia && instancia.botPausado) {
+                console.log(`[MESSAGE] ⏸️  Bot pausado globalmente para ${userId}. Ignorando mensagem de ${msg.from}.`);
                 return;
             }
 

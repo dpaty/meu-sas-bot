@@ -109,6 +109,29 @@ const getMessages = () => {
     });
 };
 
+// Listar conversas únicas agrupadas por contato
+const getConversas = (limit = 30) => {
+    return new Promise((resolve, reject) => {
+        db.all(
+            `SELECT
+                sender,
+                MAX(created_at) as ultima_mensagem,
+                (
+                    SELECT text FROM messages m2
+                    WHERE m2.sender = m.sender
+                    ORDER BY created_at DESC LIMIT 1
+                ) as ultimo_texto,
+                COUNT(*) as total_msgs
+             FROM messages m
+             GROUP BY sender
+             ORDER BY ultima_mensagem DESC
+             LIMIT ?`,
+            [limit],
+            (err, rows) => err ? reject(err) : resolve(rows)
+        );
+    });
+};
+
 // Incrementar o contador de mensagens do cliente (Taxímetro)
 const incrementMessageCounter = (id) => {
     return new Promise((resolve, reject) => {
@@ -120,4 +143,4 @@ const incrementMessageCounter = (id) => {
     });
 };
 
-module.exports = { saveUser, getUser, saveMessage, getMessages, incrementMessageCounter };
+module.exports = { db, saveUser, getUser, saveMessage, getMessages, getConversas, incrementMessageCounter };
